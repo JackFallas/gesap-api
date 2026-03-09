@@ -13,7 +13,6 @@ datasource db {
 }
 
 // ---- ROLES DEL SISTEMA ----
-// Define los permisos de cada tipo de usuario
 model Role {
   id          Int      @id @default(autoincrement())
   name        String   @unique @db.VarChar(30)
@@ -28,7 +27,6 @@ model Role {
 }
 
 // ---- USUARIOS DEL SISTEMA ----
-// Personal del hospital: doctores, enfermeros, bomberos, etc.
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique @db.VarChar(100)
@@ -48,32 +46,50 @@ model User {
 }
 
 // ---- PACIENTES ----
-// Identificados por DPI (Documento Personal de Identificacion, 13 digitos)
+// Nombre completo segun formato guatemalteco: hasta 3 nombres y 2 apellidos
 model Patient {
-  id               Int       @id @default(autoincrement())
-  dpi              String    @unique @db.VarChar(13)
-  firstName        String    @map("first_name") @db.VarChar(50)
-  lastName         String    @map("last_name") @db.VarChar(50)
-  birthDate        DateTime  @map("birth_date") @db.Date
-  sex              Sex
-  bloodType        BloodType? @map("blood_type")
-  phone            String?   @db.VarChar(8)
-  address          String?   @db.VarChar(255)
-  emergencyContact String?   @map("emergency_contact") @db.VarChar(100)
-  emergencyPhone   String?   @map("emergency_phone") @db.VarChar(8)
-  isActive         Boolean   @default(true) @map("is_active")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement())
+  dpi            String    @unique @db.VarChar(13)
+  firstName      String    @map("first_name") @db.VarChar(50)
+  secondName     String?   @map("second_name") @db.VarChar(50)
+  thirdName      String?   @map("third_name") @db.VarChar(50)
+  firstLastName  String    @map("first_last_name") @db.VarChar(50)
+  secondLastName String    @map("second_last_name") @db.VarChar(50)
+  birthDate      DateTime  @map("birth_date") @db.Date
+  sex            Sex
+  bloodType      BloodType? @map("blood_type")
+  phone          String?   @db.VarChar(8)
+  address        String?   @db.VarChar(255)
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  allergies      Allergy[]
-  medicalRecords MedicalRecord[]
-  treatments     Treatment[]
+  allergies         Allergy[]
+  medicalRecords    MedicalRecord[]
+  treatments        Treatment[]
+  emergencyContacts EmergencyContact[]
 
   @@map("patients")
 }
 
+// ---- CONTACTOS DE EMERGENCIA ----
+// Cada paciente puede tener hasta 5 contactos de emergencia
+model EmergencyContact {
+  id          Int      @id @default(autoincrement())
+  patientId   Int      @map("patient_id")
+  fullName    String   @map("full_name") @db.VarChar(100)
+  phone       String   @db.VarChar(8)
+  relationship String? @db.VarChar(50)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@map("emergency_contacts")
+}
+
 // ---- ALERGIAS ----
-// Cada alergia pertenece a un paciente
 model Allergy {
   id          Int             @id @default(autoincrement())
   patientId   Int             @map("patient_id")
@@ -91,7 +107,6 @@ model Allergy {
 }
 
 // ---- EXPEDIENTE MEDICO ----
-// Registros de consultas, diagnosticos, observaciones
 model MedicalRecord {
   id          Int      @id @default(autoincrement())
   patientId   Int      @map("patient_id")
@@ -109,7 +124,6 @@ model MedicalRecord {
 }
 
 // ---- TRATAMIENTOS ----
-// Medicamentos y planes asignados al paciente
 model Treatment {
   id          Int      @id @default(autoincrement())
   patientId   Int      @map("patient_id")
